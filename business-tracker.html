@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
+
+  /* LOGIN SCREEN */
+  #login-screen{position:fixed;inset:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;z-index:1000}
+  .login-box{background:#fff;border-radius:16px;padding:2.5rem;width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+  .login-logo{width:56px;height:56px;background:#1a1a1a;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem}
+  .login-logo i{font-size:28px;color:#fff}
+  .login-box h1{font-size:22px;font-weight:600;margin-bottom:6px;color:#1a1a1a}
+  .login-box p{font-size:14px;color:#888;margin-bottom:1.75rem}
+  .login-box input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:10px;outline:none;transition:border .2s}
+  .login-box input:focus{border-color:#1a1a1a}
+  .login-btn{width:100%;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s}
+  .login-btn:hover{opacity:.85}
+  .login-error{color:#a32d2d;font-size:13px;margin-top:8px;display:none}
+  .login-hint{font-size:12px;color:#aaa;margin-top:14px}
+
+  /* APP */
+  #app{display:none}
+  .topbar{background:#fff;border-bottom:1px solid #e8e8e4;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+  .topbar-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px}
+  .topbar-brand .logo{width:32px;height:32px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .topbar-brand .logo i{font-size:16px;color:#fff}
+  .topbar-right{display:flex;align-items:center;gap:10px}
+  .logout-btn{font-size:13px;color:#888;border:1px solid #e0e0e0;border-radius:8px;padding:5px 12px;cursor:pointer;background:transparent}
+  .logout-btn:hover{background:#f5f5f0}
+
+  .container{max-width:1100px;margin:0 auto;padding:1.5rem}
+  .nav{display:flex;gap:4px;margin-bottom:1.5rem;background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:6px;flex-wrap:wrap}
+  .nav button{padding:7px 16px;font-size:13px;border-radius:8px;border:none;background:transparent;color:#666;cursor:pointer;transition:all .15s;font-weight:500;display:flex;align-items:center;gap:6px}
+  .nav button.active{background:#1a1a1a;color:#fff}
+  .nav button:hover:not(.active){background:#f5f5f0;color:#1a1a1a}
+
+  .section{display:none}
+  .section.active{display:block}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
+  .metric{background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:1rem 1.25rem}
+  .metric .label{font-size:12px;color:#888;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+  .metric .value{font-size:22px;font-weight:600;color:#1a1a1a}
+
+  .card{background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+  .card-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
+
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .form-row.three{grid-template-columns:1fr 1fr 1fr}
+  label{font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500}
+  input,select,textarea{width:100%;padding:8px 12px;font-size:13px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;transition:border .2s;font-family:inherit}
+  input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
+  textarea{resize:vertical;min-height:60px}
+
+  .btn{padding:7px 16px;font-size:13px;border-radius:8px;border:1px solid #e0e0e0;background:#fff;color:#1a1a1a;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+  .btn:hover{background:#f5f5f0}
+  .btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+  .btn-primary:hover{opacity:.85;background:#1a1a1a}
+  .btn-danger{color:#a32d2d;border-color:#f09595}
+  .btn-danger:hover{background:#fcebeb}
+  .btn-sm{padding:4px 10px;font-size:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:12px;font-weight:600;color:#888;padding:8px 10px;border-bottom:1px solid #e8e8e4;white-space:nowrap}
+  td{padding:10px;border-bottom:1px solid #f0f0ec;color:#1a1a1a;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafaf7}
+
+  .badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+  .badge-green{background:#eaf3de;color:#3b6d11}
+  .badge-red{background:#fcebeb;color:#a32d2d}
+  .badge-amber{background:#faeeda;color:#854f0b}
+  .badge-blue{background:#e6f1fb;color:#185fa5}
+  .badge-purple{background:#eeedfe;color:#534ab7}
+  .badge-gray{background:#f1efe8;color:#5f5e5a}
+
+  .empty{text-align:center;padding:3rem;color:#aaa;font-size:13px}
+  .chart-wrap{position:relative;width:100%;height:220px}
+  .action-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .search-bar{width:100%;margin-bottom:1rem;padding:9px 12px;font-size:13px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;font-family:inherit}
+  .search-bar:focus{border-color:#1a1a1a}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .profit-pos{color:#3b6d11}
+  .profit-neg{color:#a32d2d}
+
+  @media(max-width:600px){
+    .form-row,.form-row.three,.grid-2{grid-template-columns:1fr}
+    .metrics{grid-template-columns:1fr 1fr}
+    .container{padding:1rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><i class="ti ti-chart-bar"></i></div>
+    <h1>Business Tracker</h1>
+    <p>Enter your password to continue</p>
+    <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')tryLogin()">
+    <button class="login-btn" onclick="tryLogin()">Sign in</button>
+    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+    <div class="login-hint">Contact your admin if you forgot the password.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="logo"><i class="ti ti-chart-bar"></i></div>
+      Business Tracker
+    </div>
+    <div class="topbar-right">
+      <button class="logout-btn" onclick="logout()"><i class="ti ti-logout"></i> Sign out</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="nav">
+      <button class="active" onclick="showTab('dashboard',this)"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+      <button onclick="showTab('revenue',this)"><i class="ti ti-arrow-up-circle"></i> Revenue</button>
+      <button onclick="showTab('expenses',this)"><i class="ti ti-arrow-down-circle"></i> Expenses</button>
+      <button onclick="showTab('clients',this)"><i class="ti ti-users"></i> Clients</button>
+      <button onclick="showTab('projects',this)"><i class="ti ti-briefcase"></i> Projects</button>
+      <button onclick="showTab('inventory',this)"><i class="ti ti-box"></i> Inventory</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="section active">
+      <div class="metrics" id="dash-metrics"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Revenue vs Expenses (6 months)</div>
+          <div class="chart-wrap"><canvas id="chart-overview" role="img" aria-label="Monthly revenue vs expenses"></canvas></div>
+          <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#888">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#1d9e75;display:inline-block"></span>Revenue</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#f09595;display:inline-block"></span>Expenses</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent activity</div>
+          <div id="dash-activity"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div id="tab-revenue" class="section">
+      <div class="card">
+        <div class="card-title">Add revenue entry <button class="btn btn-primary btn-sm" onclick="toggleForm('rev-form')"><i class="ti ti-plus"></i> Add</button></div>
+        <div id="rev-form" style="display:none;padding-top:4px">
+          <div class="form-row three">
+            <div><label>Date</label><input type="date" id="rev-date"></div>
+            <div><label>Amount (₹)</label><input type="number" id="rev-amount" placeholder="0"></div>
+            <div><label>Category</label><select id="rev-cat"><option>Sales</option><option>Service</option><option>Consulting</option><option>Subscription</option><option>Other</option></select></div>
+          </div>
+          <div class="form-row">
+            <div><label>Client / Source</label><input type="text" id="rev-source" placeholder="e.g. Acme Corp"></div>
+            <div><label>Note</label><input type="text" id="rev-note" placeholder="Optional"></div>
+          </div>
+          <div class="action-row"><button class="btn btn-sm" onclick="toggleForm('rev-form')">Cancel</button><button class="btn btn-primary btn-sm" onclick="addRevenue()"><i class="ti ti-check"></i> Save</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All revenue <span id="rev-total-badge" class="badge badge-green"></span></div>
+        <input class="search-bar" placeholder="Search by source, category, note..." oninput="renderRevenue(this.value)">
+        <table><thead><tr><th>Date</th><th>Source</th><th>Category</th><th>Note</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody id="rev-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div id="tab-expenses" class="section">
+      <div class="card">
+        <div class="card-title">Add expense entry <button class="btn btn-primary btn-sm" onclick="toggleForm('exp-form')"><i class="ti ti-plus"></i> Add</button></div>
+        <div id="exp-form" style="display:none;padding-top:4px">
+          <div class="form-row three">
+            <div><label>Date</label><input type="date" id="exp-date"></div>
+            <div><label>Amount (₹)</label><input type="number" id="exp-amount" placeholder="0"></div>
+            <div><label>Category</label><select id="exp-cat"><option>Salary</option><option>Rent</option><option>Marketing</option><option>Supplies</option><option>Utilities</option><option>Travel</option><option>Software</option><option>Other</option></select></div>
+          </div>
+          <div class="form-row">
+            <div><label>Vendor / Payee</label><input type="text" id="exp-vendor" placeholder="e.g. AWS"></div>
+            <div><label>Note</label><input type="text" id="exp-note" placeholder="Optional"></div>
+          </div>
+          <div class="action-row"><button class="btn btn-sm" onclick="toggleForm('exp-form')">Cancel</button><button class="btn btn-primary btn-sm" onclick="addExpense()"><i class="ti ti-check"></i> Save</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All expenses <span id="exp-total-badge" class="badge badge-red"></span></div>
+        <input class="search-bar" placeholder="Search by vendor, category, note..." oninput="renderExpenses(this.value)">
+        <table><thead><tr><th>Date</th><th>Vendor</th><th>Category</th><th>Note</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody id="exp-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="tab-clients" class="section">
+      <div class="card">
+        <div class="card-title">Add client <button class="btn btn-primary btn-sm" onclick="toggleForm('cli-form')"><i class="ti ti-plus"></i> Add</button></div>
+        <div id="cli-form" style="display:none;padding-top:4px">
+          <div class="form-row">
+            <div><label>Name</label><input type="text" id="cli-name" placeholder="Client name"></div>
+            <div><label>Company</label><input type="text" id="cli-company" placeholder="Company name"></div>
+          </div>
+          <div class="form-row">
+            <div><label>Email</label><input type="email" id="cli-email" placeholder="email@example.com"></div>
+            <div><label>Phone</label><input type="tel" id="cli-phone" placeholder="+91..."></div>
+          </div>
+          <div class="form-row">
+            <div><label>Status</label><select id="cli-status"><option>Active</option><option>Lead</option><option>Inactive</option></select></div>
+            <div><label>Total value (₹)</label><input type="number" id="cli-value" placeholder="0"></div>
+          </div>
+          <div class="action-row"><button class="btn btn-sm" onclick="toggleForm('cli-form')">Cancel</button><button class="btn btn-primary btn-sm" onclick="addClient()"><i class="ti ti-check"></i> Save</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All clients</div>
+        <input class="search-bar" placeholder="Search by name, company, email..." oninput="renderClients(this.value)">
+        <table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Status</th><th style="text-align:right">Value</th><th></th></tr></thead><tbody id="cli-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div id="tab-projects" class="section">
+      <div class="card">
+        <div class="card-title">Add project <button class="btn btn-primary btn-sm" onclick="toggleForm('proj-form')"><i class="ti ti-plus"></i> Add</button></div>
+        <div id="proj-form" style="display:none;padding-top:4px">
+          <div class="form-row">
+            <div><label>Project name</label><input type="text" id="proj-name" placeholder="Project name"></div>
+            <div><label>Client</label><input type="text" id="proj-client" placeholder="Client name"></div>
+          </div>
+          <div class="form-row">
+            <div><label>Start date</label><input type="date" id="proj-start"></div>
+            <div><label>Deadline</label><input type="date" id="proj-end"></div>
+          </div>
+          <div class="form-row">
+            <div><label>Budget (₹)</label><input type="number" id="proj-budget" placeholder="0"></div>
+            <div><label>Status</label><select id="proj-status"><option>Planning</option><option>In progress</option><option>Review</option><option>Completed</option><option>On hold</option></select></div>
+          </div>
+          <div class="action-row"><button class="btn btn-sm" onclick="toggleForm('proj-form')">Cancel</button><button class="btn btn-primary btn-sm" onclick="addProject()"><i class="ti ti-check"></i> Save</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All projects</div>
+        <input class="search-bar" placeholder="Search by name, client..." oninput="renderProjects(this.value)">
+        <table><thead><tr><th>Name</th><th>Client</th><th>Start</th><th>Deadline</th><th style="text-align:right">Budget</th><th>Status</th><th></th></tr></thead><tbody id="proj-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="tab-inventory" class="section">
+      <div class="card">
+        <div class="card-title">Add inventory item <button class="btn btn-primary btn-sm" onclick="toggleForm('inv-form')"><i class="ti ti-plus"></i> Add</button></div>
+        <div id="inv-form" style="display:none;padding-top:4px">
+          <div class="form-row">
+            <div><label>Item name</label><input type="text" id="inv-name" placeholder="Item name"></div>
+            <div><label>SKU / Code</label><input type="text" id="inv-sku" placeholder="SKU001"></div>
+          </div>
+          <div class="form-row three">
+            <div><label>Quantity</label><input type="number" id="inv-qty" placeholder="0"></div>
+            <div><label>Unit cost (₹)</label><input type="number" id="inv-cost" placeholder="0"></div>
+            <div><label>Sell price (₹)</label><input type="number" id="inv-price" placeholder="0"></div>
+          </div>
+          <div class="form-row">
+            <div><label>Category</label><input type="text" id="inv-cat" placeholder="Category"></div>
+            <div><label>Low stock alert at</label><input type="number" id="inv-alert" placeholder="5"></div>
+          </div>
+          <div class="action-row"><button class="btn btn-sm" onclick="toggleForm('inv-form')">Cancel</button><button class="btn btn-primary btn-sm" onclick="addItem()"><i class="ti ti-check"></i> Save</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All inventory</div>
+        <input class="search-bar" placeholder="Search by name, SKU, category..." oninput="renderInventory(this.value)">
+        <table><thead><tr><th>Item</th><th>SKU</th><th>Category</th><th style="text-align:right">Qty</th><th style="text-align:right">Cost</th><th style="text-align:right">Price</th><th>Status</th><th></th></tr></thead><tbody id="inv-table"></tbody></table>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ─── PASSWORD CONFIG ───────────────────────────────────────────────
+// Change this password to whatever you want
+const APP_PASSWORD = 'business2024';
+// ───────────────────────────────────────────────────────────────────
+
+let data = {revenue:[],expenses:[],clients:[],projects:[],inventory:[]};
+let overviewChart = null;
+
+function tryLogin(){
+  const pw = document.getElementById('pw-input').value;
+  if(pw === APP_PASSWORD){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    sessionStorage.setItem('bt_auth','1');
+    loadData();
+    renderDashboard();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('bt_auth');
+  location.reload();
+}
+
+if(sessionStorage.getItem('bt_auth')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadData();
+  renderDashboard();
+}
+
+function saveData(){ localStorage.setItem('biztracker_data', JSON.stringify(data)); }
+function loadData(){
+  const d = localStorage.getItem('biztracker_data');
+  if(d) data = JSON.parse(d);
+  renderRevenue(); renderExpenses(); renderClients(); renderProjects(); renderInventory();
+}
+
+function fmt(n){ return '₹'+Number(n||0).toLocaleString('en-IN'); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function uid(){ return Date.now()+'_'+Math.random().toString(36).slice(2,6); }
+
+function showTab(t, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+  if(t==='dashboard') renderDashboard();
+}
+
+function toggleForm(id){
+  const f = document.getElementById(id);
+  f.style.display = f.style.display==='none' ? 'block' : 'none';
+  if(f.style.display==='block'){
+    const d = f.querySelector('input[type=date]');
+    if(d && !d.value) d.value = today();
+  }
+}
+
+function statusBadge(s){
+  const map={Active:'green',Lead:'blue',Inactive:'gray','In progress':'blue',Planning:'purple',Completed:'green',Review:'amber','On hold':'amber'};
+  return `<span class="badge badge-${map[s]||'gray'}">${s}</span>`;
+}
+
+/* ── REVENUE ── */
+function addRevenue(){
+  const amt = parseFloat(document.getElementById('rev-amount').value);
+  if(!amt||amt<=0) return alert('Enter a valid amount');
+  data.revenue.push({id:uid(),date:document.getElementById('rev-date').value||today(),amount:amt,category:document.getElementById('rev-cat').value,source:document.getElementById('rev-source').value||'-',note:document.getElementById('rev-note').value});
+  ['rev-amount','rev-source','rev-note'].forEach(i=>document.getElementById(i).value='');
+  toggleForm('rev-form'); saveData(); renderRevenue();
+}
+function renderRevenue(q=''){
+  const rows = data.revenue.filter(r=>(r.source+r.note+r.category).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));
+  const total = data.revenue.reduce((s,r)=>s+r.amount,0);
+  document.getElementById('rev-total-badge').textContent = fmt(total)+' total';
+  const tb = document.getElementById('rev-table');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="6" class="empty">No revenue entries yet. Click Add to get started.</td></tr>`;return}
+  tb.innerHTML = rows.map(r=>`<tr><td>${r.date}</td><td><strong>${r.source}</strong></td><td><span class="badge badge-green">${r.category}</span></td><td style="color:#888">${r.note||'-'}</td><td style="text-align:right;font-weight:600">${fmt(r.amount)}</td><td><button class="btn btn-danger btn-sm" onclick="del('revenue','${r.id}',renderRevenue)"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+}
+
+/* ── EXPENSES ── */
+function addExpense(){
+  const amt = parseFloat(document.getElementById('exp-amount').value);
+  if(!amt||amt<=0) return alert('Enter a valid amount');
+  data.expenses.push({id:uid(),date:document.getElementById('exp-date').value||today(),amount:amt,category:document.getElementById('exp-cat').value,vendor:document.getElementById('exp-vendor').value||'-',note:document.getElementById('exp-note').value});
+  ['exp-amount','exp-vendor','exp-note'].forEach(i=>document.getElementById(i).value='');
+  toggleForm('exp-form'); saveData(); renderExpenses();
+}
+function renderExpenses(q=''){
+  const rows = data.expenses.filter(r=>(r.vendor+r.note+r.category).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date));
+  const total = data.expenses.reduce((s,r)=>s+r.amount,0);
+  document.getElementById('exp-total-badge').textContent = fmt(total)+' total';
+  const tb = document.getElementById('exp-table');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="6" class="empty">No expense entries yet. Click Add to get started.</td></tr>`;return}
+  tb.innerHTML = rows.map(r=>`<tr><td>${r.date}</td><td><strong>${r.vendor}</strong></td><td><span class="badge badge-red">${r.category}</span></td><td style="color:#888">${r.note||'-'}</td><td style="text-align:right;font-weight:600">${fmt(r.amount)}</td><td><button class="btn btn-danger btn-sm" onclick="del('expenses','${r.id}',renderExpenses)"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+}
+
+/* ── CLIENTS ── */
+function addClient(){
+  const name = document.getElementById('cli-name').value.trim();
+  if(!name) return alert('Enter a client name');
+  data.clients.push({id:uid(),name,company:document.getElementById('cli-company').value,email:document.getElementById('cli-email').value,phone:document.getElementById('cli-phone').value,status:document.getElementById('cli-status').value,value:parseFloat(document.getElementById('cli-value').value)||0});
+  ['cli-name','cli-company','cli-email','cli-phone','cli-value'].forEach(i=>document.getElementById(i).value='');
+  toggleForm('cli-form'); saveData(); renderClients();
+}
+function renderClients(q=''){
+  const rows = data.clients.filter(r=>(r.name+r.company+r.email).toLowerCase().includes(q.toLowerCase()));
+  const tb = document.getElementById('cli-table');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="7" class="empty">No clients yet. Click Add to get started.</td></tr>`;return}
+  tb.innerHTML = rows.map(r=>`<tr><td><strong>${r.name}</strong></td><td>${r.company||'-'}</td><td style="color:#888">${r.email||'-'}</td><td style="color:#888">${r.phone||'-'}</td><td>${statusBadge(r.status)}</td><td style="text-align:right">${r.value?fmt(r.value):'-'}</td><td><button class="btn btn-danger btn-sm" onclick="del('clients','${r.id}',renderClients)"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+}
+
+/* ── PROJECTS ── */
+function addProject(){
+  const name = document.getElementById('proj-name').value.trim();
+  if(!name) return alert('Enter a project name');
+  data.projects.push({id:uid(),name,client:document.getElementById('proj-client').value,start:document.getElementById('proj-start').value,end:document.getElementById('proj-end').value,budget:parseFloat(document.getElementById('proj-budget').value)||0,status:document.getElementById('proj-status').value});
+  ['proj-name','proj-client','proj-start','proj-end','proj-budget'].forEach(i=>document.getElementById(i).value='');
+  toggleForm('proj-form'); saveData(); renderProjects();
+}
+function renderProjects(q=''){
+  const rows = data.projects.filter(r=>(r.name+r.client).toLowerCase().includes(q.toLowerCase()));
+  const tb = document.getElementById('proj-table');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="7" class="empty">No projects yet. Click Add to get started.</td></tr>`;return}
+  tb.innerHTML = rows.map(r=>`<tr><td><strong>${r.name}</strong></td><td>${r.client||'-'}</td><td>${r.start||'-'}</td><td>${r.end||'-'}</td><td style="text-align:right">${r.budget?fmt(r.budget):'-'}</td><td>${statusBadge(r.status)}</td><td><button class="btn btn-danger btn-sm" onclick="del('projects','${r.id}',renderProjects)"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+}
+
+/* ── INVENTORY ── */
+function addItem(){
+  const name = document.getElementById('inv-name').value.trim();
+  if(!name) return alert('Enter an item name');
+  data.inventory.push({id:uid(),name,sku:document.getElementById('inv-sku').value,qty:parseInt(document.getElementById('inv-qty').value)||0,cost:parseFloat(document.getElementById('inv-cost').value)||0,price:parseFloat(document.getElementById('inv-price').value)||0,category:document.getElementById('inv-cat').value,alert:parseInt(document.getElementById('inv-alert').value)||5});
+  ['inv-name','inv-sku','inv-qty','inv-cost','inv-price','inv-cat','inv-alert'].forEach(i=>document.getElementById(i).value='');
+  toggleForm('inv-form'); saveData(); renderInventory();
+}
+function renderInventory(q=''){
+  const rows = data.inventory.filter(r=>(r.name+r.sku+r.category).toLowerCase().includes(q.toLowerCase()));
+  const tb = document.getElementById('inv-table');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="8" class="empty">No inventory items yet. Click Add to get started.</td></tr>`;return}
+  tb.innerHTML = rows.map(r=>{
+    const low = r.qty <= r.alert;
+    return `<tr><td><strong>${r.name}</strong></td><td style="color:#888">${r.sku||'-'}</td><td>${r.category||'-'}</td><td style="text-align:right">${r.qty}</td><td style="text-align:right">${fmt(r.cost)}</td><td style="text-align:right">${fmt(r.price)}</td><td><span class="badge badge-${low?'red':'green'}">${low?'Low stock':'In stock'}</span></td><td><button class="btn btn-danger btn-sm" onclick="del('inventory','${r.id}',renderInventory)"><i class="ti ti-trash"></i></button></td></tr>`;
+  }).join('');
+}
+
+/* ── DELETE ── */
+function del(type, id, render){
+  if(!confirm('Delete this entry?')) return;
+  data[type] = data[type].filter(r=>r.id!==id);
+  saveData(); render();
+  if(document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
+}
+
+/* ── DASHBOARD ── */
+function renderDashboard(){
+  const rev = data.revenue.reduce((s,r)=>s+r.amount,0);
+  const exp = data.expenses.reduce((s,r)=>s+r.amount,0);
+  const profit = rev - exp;
+  const activeClients = data.clients.filter(c=>c.status==='Active').length;
+  const openProjects = data.projects.filter(p=>p.status==='In progress'||p.status==='Planning').length;
+  const lowStock = data.inventory.filter(i=>i.qty<=i.alert).length;
+
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric"><div class="label"><i class="ti ti-arrow-up-circle"></i> Total revenue</div><div class="value">${fmt(rev)}</div></div>
+    <div class="metric"><div class="label"><i class="ti ti-arrow-down-circle"></i> Total expenses</div><div class="value">${fmt(exp)}</div></div>
+    <div class="metric"><div class="label"><i class="ti ti-trending-up"></i> Net profit</div><div class="value ${profit>=0?'profit-pos':'profit-neg'}">${fmt(profit)}</div></div>
+    <div class="metric"><div class="label"><i class="ti ti-users"></i> Active clients</div><div class="value">${activeClients}</div></div>
+    <div class="metric"><div class="label"><i class="ti ti-briefcase"></i> Open projects</div><div class="value">${openProjects}</div></div>
+    <div class="metric"><div class="label"><i class="ti ti-alert-triangle"></i> Low stock</div><div class="value ${lowStock?'profit-neg':''}">${lowStock}</div></div>
+  `;
+
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  const labels=[], revData=[], expData=[];
+  for(let i=5;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    labels.push(months[d.getMonth()]);
+    revData.push(data.revenue.filter(r=>r.date.startsWith(key)).reduce((s,r)=>s+r.amount,0));
+    expData.push(data.expenses.filter(e=>e.date.startsWith(key)).reduce((s,e)=>s+e.amount,0));
+  }
+
+  const ctx = document.getElementById('chart-overview').getContext('2d');
+  if(overviewChart) overviewChart.destroy();
+  overviewChart = new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Revenue',data:revData,backgroundColor:'#1d9e75',borderRadius:4},{label:'Expenses',data:expData,backgroundColor:'#f09595',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#888'}},y:{ticks:{callback:v=>'₹'+v.toLocaleString('en-IN'),font:{size:11},color:'#888'},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+
+  const allActs = [
+    ...data.revenue.slice(-4).map(r=>({date:r.date,text:`Revenue: ${fmt(r.amount)} from ${r.source}`,color:'green'})),
+    ...data.expenses.slice(-4).map(e=>({date:e.date,text:`Expense: ${fmt(e.amount)} — ${e.vendor}`,color:'red'})),
+    ...data.clients.slice(-2).map(c=>({date:today(),text:`Client added: ${c.name}`,color:'blue'})),
+    ...data.projects.slice(-2).map(p=>({date:p.start||today(),text:`Project: ${p.name} (${p.status})`,color:'purple'})),
+  ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+
+  const act = document.getElementById('dash-activity');
+  if(!allActs.length){act.innerHTML='<div class="empty">Add data to see recent activity here</div>';return}
+  act.innerHTML = allActs.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0ec"><span class="badge badge-${a.color}" style="white-space:nowrap;margin-top:1px;font-size:11px">${a.date}</span><span style="font-size:13px">${a.text}</span></div>`).join('');
+}
+</script>
+</body>
+</html>
